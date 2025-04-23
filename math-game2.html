@@ -88,10 +88,19 @@
             transform: scale(1.1);
             background: #45a049;
         }
-        #highScore {
-            font-size: 24px;
-            color: #2c3e50;
-            margin: 20px 0;
+        .leaderboard {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px auto;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
         }
 
         @keyframes pop {
@@ -113,8 +122,12 @@
     <div class="container">
         <h1 style="font-size:48px; color:#2c3e50;">🧮 Μαθηματικό Παιχνίδι! 🎮</h1>
         <button class="start-btn" id="startBtn">Έναρξη Παιχνιδιού! 🚀</button>
-        <div id="highScore"></div>
         
+        <div class="leaderboard">
+            <h2>🏆 Top 10 Παίκτες</h2>
+            <div id="topScores"></div>
+        </div>
+
         <div class="game-elements" id="gameElements">
             <div class="score-board">
                 <div class="score" style="font-size:24px;">🏁 Επίπεδο: <span id="level">1</span></div>
@@ -134,99 +147,79 @@
         let timer;
         let currentQuestion;
         let playerName = '';
-        const highScores = JSON.parse(localStorage.getItem('mathGameHighScores')) || {};
+        const DB_NAME = 'mathGameScores';
 
         function generateQuestion(level) {
-            let a, b, result;
+            let a, b;
             switch(level) {
-                case 1: // Πρόσθεση μέχρι 10
+                case 1: 
                     a = Math.floor(Math.random() * 10);
                     b = Math.floor(Math.random() * (10 - a));
                     return { q: `${a} + ${b} = `, a: a + b };
-
-                case 2: // Πρόσθεση μέχρι 20
+                case 2:
                     a = Math.floor(Math.random() * 15) + 5;
                     b = Math.floor(Math.random() * (20 - a));
                     return { q: `${a} + ${b} = `, a: a + b };
-
-                case 3: // Διπλάσιο μονοψήφιου
+                case 3:
                     a = Math.floor(Math.random() * 9) + 1;
                     return { q: `Διπλάσιο του ${a} = `, a: a * 2 };
-
-                case 4: // Αφαίρεση μέχρι 10
+                case 4:
                     a = Math.floor(Math.random() * 9) + 1;
                     b = Math.floor(Math.random() * a);
                     return { q: `${a} - ${b} = `, a: a - b };
-
-                case 5: // Αφαίρεση από 20
+                case 5:
                     a = Math.floor(Math.random() * 9) + 11;
                     b = Math.floor(Math.random() * 9) + 1;
                     return { q: `${a} - ${b} = `, a: a - b };
-
-                case 6: // Μισό μέχρι 12
+                case 6:
                     a = (Math.floor(Math.random() * 6) + 1) * 2;
                     return { q: `Μισό του ${a} = `, a: a / 2 };
-
-                case 7: // Προπαίδεια 2
+                case 7:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `2 × ${b} = `, a: 2 * b };
-
-                case 8: // Προπαίδεια 10
+                case 8:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `10 × ${b} = `, a: 10 * b };
-
-                case 9: // Πρόσθεση δεκάδων + μονοψήφιο
+                case 9:
                     a = Math.floor(Math.random() * 9 + 1) * 10;
                     b = Math.floor(Math.random() * 9) + 1;
                     return { q: `${a} + ${b} = `, a: a + b };
-
-                case 10: // Αφαίρεση από δεκάδες
+                case 10:
                     a = Math.floor(Math.random() * 9 + 1) * 10;
                     b = Math.floor(Math.random() * 9) + 1;
                     return { q: `${a} - ${b} = `, a: a - b };
-
-                case 11: // Προπαίδεια 5
+                case 11:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `5 × ${b} = `, a: 5 * b };
-
-                case 12: // Προπαίδεια 3
+                case 12:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `3 × ${b} = `, a: 3 * b };
-
-                case 13: // Προπαίδεια 4
+                case 13:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `4 × ${b} = `, a: 4 * b };
-
-                case 14: // Προπαίδεια 6
+                case 14:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `6 × ${b} = `, a: 6 * b };
-
-                case 15: // Προπαίδεια 7
+                case 15:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `7 × ${b} = `, a: 7 * b };
-
-                case 16: // Προπαίδεια 8
+                case 16:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `8 × ${b} = `, a: 8 * b };
-
-                case 17: // Προπαίδεια 9
+                case 17:
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `9 × ${b} = `, a: 9 * b };
-
-                case 18: // Τυχαία προπαίδεια
+                case 18:
                     const randomTable = Math.floor(Math.random() * 8) + 2;
                     b = Math.floor(Math.random() * 10) + 1;
                     return { q: `${randomTable} × ${b} = `, a: randomTable * b };
-
-                case 19: // Διαιρέσεις
+                case 19:
                     const table = Math.floor(Math.random() * 8) + 2;
                     b = Math.floor(Math.random() * 9) + 1;
                     a = table * b;
                     return { q: `${a} ÷ ${table} = `, a: b };
-
-                case 20: // Τυχαία ερώτηση
+                case 20:
                     return generateQuestion(Math.floor(Math.random() * 19) + 1);
-                    
                 default:
                     return generateQuestion(1);
             }
@@ -316,19 +309,32 @@
             }
         }
 
-        function endGame() {
-            if(currentLevel - 1 > (highScores[playerName] || 0)) {
-                highScores[playerName] = currentLevel - 1;
-                localStorage.setItem('mathGameHighScores', JSON.stringify(highScores));
-            }
-            alert(`🎮 ${playerName}, έφτασες μέχρι επίπεδο ${currentLevel - 1}!\n🏆 Ρεκόρ: ${highScores[playerName] || 0}`);
-            document.getElementById('gameElements').style.display = 'none';
-            document.getElementById('startBtn').style.display = 'block';
-            showHighScore();
+        function saveScore(name, score) {
+            const scores = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+            scores.push({ name, score, date: new Date().toISOString() });
+            scores.sort((a, b) => b.score - a.score);
+            const topScores = scores.slice(0, 10);
+            localStorage.setItem(DB_NAME, JSON.stringify(topScores));
         }
 
-        function showHighScore() {
-            document.getElementById('highScore').innerHTML = `🏅 <strong>${playerName}</strong>: Ρεκόρ Επιπέδου - ${highScores[playerName] || 0}`;
+        function loadTopScores() {
+            const scores = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+            const scoresHTML = scores.map((score, index) => `
+                <div class="score-item">
+                    <span>${index + 1}. ${score.name}</span>
+                    <span>${score.score}</span>
+                </div>
+            `).join('');
+            document.getElementById('topScores').innerHTML = scoresHTML;
+        }
+
+        function endGame() {
+            const finalScore = currentLevel - 1;
+            saveScore(playerName, finalScore);
+            loadTopScores();
+            alert(`🎮 ${playerName}, έφτασες μέχρι επίπεδο ${finalScore}!`);
+            document.getElementById('gameElements').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'block';
         }
 
         function startGame() {
@@ -340,10 +346,11 @@
             document.getElementById('startBtn').style.display = 'none';
             document.getElementById('gameElements').style.display = 'block';
             document.getElementById('hearts').textContent = '❤️'.repeat(lives);
-            showHighScore();
             updateGame();
         }
 
+        // Αρχική φόρτωση
+        window.onload = loadTopScores;
         document.getElementById('startBtn').addEventListener('click', startGame);
     </script>
 </body>
